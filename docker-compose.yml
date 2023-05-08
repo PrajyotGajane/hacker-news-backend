@@ -8,20 +8,22 @@ services:
     ports:
       - 8080:8080
     command: --spring.profiles.active=docker
+    depends_on:
+      - mysqldb
     environment:
       MYSQL_HOST: mysqldb
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
+      MYSQL_USER: prajyot
+      MYSQL_PASSWORD: prajyot
       MYSQL_PORT: 3306
   mysqldb:
-    container_name: mysqldb
+    container_name: mysqldb2
     image: mysql
-    volumes:
-      -  /home/user/Desktop/db:/var/lib/mysql
+    restart: always
     ports:
       - 3306:3306
     environment:
       MYSQL_DATABASE: hacker_news_db
-      MYSQL_USER: root
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: prajyot
+      MYSQL_PASSWORD: prajyot
+      MYSQL_ROOT_PASSWORD: prajyot
 
