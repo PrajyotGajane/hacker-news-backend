@@ -35,11 +35,12 @@ public class HackerNewsService implements IHackerNewsService {
     private List<Story> pastStoriesList;
 
     private static Boolean storeInDB = false;
-    private static final String ITEM_URL_TEMPLATE = "https://hacker-news.firebaseio.com/v0/item/%d.json?print=pretty";
+    private static final String ITEM_URL_TEMPLATE = "https://hacker-news.firebaseio.com/v0/item/%d.json";
+    private static final String TOP_STORIES = "https://hacker-news.firebaseio.com/v0/topstories.json";
 
     @Cacheable("topStories")
     public List<StoryDTO> getTopTenStoriesByScore() {
-
+        log.info("ENTRY : getTopTenStoriesByScore");
         if (storeInDB) {
             newsRepository.truncateTable();
             newsRepository.saveAll(pastStoriesList);
@@ -47,10 +48,9 @@ public class HackerNewsService implements IHackerNewsService {
         }
 
         ResponseEntity<List> response = restTemplate
-                .getForEntity("https://hacker-news.firebaseio.com/v0/topstories.json", List.class);
+                .getForEntity(TOP_STORIES, List.class);
 
         List<Integer> list = response.getBody();
-        list.forEach(System.out::println);
 
         List<CompletableFuture<StoryDTO>> futures = new ArrayList<>();
         List<StoryDTO> storyDTOList = new ArrayList<>();
@@ -65,8 +65,6 @@ public class HackerNewsService implements IHackerNewsService {
 
         futures.forEach(CompletableFuture::join);
 
-        System.out.println("SIZE OF FINAL LIST : " + storyDTOList.size());
-
         // Sort stories by score and return the top 10
         List<StoryDTO> topFifList = storyDTOList.stream().sorted(Comparator.comparing(StoryDTO::getScore).reversed()).limit(10).collect(Collectors.toList());
 
@@ -74,27 +72,27 @@ public class HackerNewsService implements IHackerNewsService {
 
         storeInDB = true;
 
+        log.info("EXIT : getTopTenStoriesByScore");
         return topFifList;
     }
 
     @Override
     public List<StoryDTO> getPastStories() {
-
+        log.info("ENTRY : getPastStories");
         List<Story> storyList = newsRepository.findAllPastStories();
 
         List<StoryDTO> storyDTOList = storyMapper.storyListToStoryDTOList(storyList);
 
+        log.info("EXIT : getPastStories");
         return storyDTOList;
     }
 
     @Override
     public List<CommentsDTO> getComments(Integer storyId) {
-
+        log.info("ENTRY : getComments");
         ResponseEntity<StoryDTO> response = restTemplate
-                .getForEntity(String.format("https://hacker-news.firebaseio.com/v0/item/%d.json", storyId), StoryDTO.class);
+                .getForEntity(String.format(ITEM_URL_TEMPLATE, storyId), StoryDTO.class);
         StoryDTO storyDTO = response.getBody();
-
-        storyDTO.getKids().forEach(System.out::println);
 
         storyDTO.getKids().subList(10, storyDTO.getKids().size()).clear();
 
@@ -105,31 +103,20 @@ public class HackerNewsService implements IHackerNewsService {
             futures.add(CompletableFuture.supplyAsync(() -> {
                 StoryCommentsDTO responseDTO = restTemplate
                         .getForObject(String
-                                .format("https://hacker-news.firebaseio.com/v0/item/%d.json", kidCommentId), StoryCommentsDTO.class);
+                                .format(ITEM_URL_TEMPLATE, kidCommentId), StoryCommentsDTO.class);
                 storyDTOList.add(responseDTO);
                 return storyDTO;
             }));
         }
 
-
         futures.forEach(CompletableFuture::join);
 
         storyDTOList.sort(Comparator.comparingInt(comments -> comments.getKids() == null || comments.getKids().isEmpty() ? 0 : comments.getKids().size()));
 
-
-//        for (StoryCommentsDTO storyCommentsDTO : storyDTOList) {
-//            if(!storyCommentsDTO.getKids().isEmpty() && storyCommentsDTO.getKids() != null) {
-//                System.out.println("KIDS ARRAY SIZE : " + storyCommentsDTO.getKids().size());
-//            }
-//        }
-
         List<CommentsDTO> responseList = storyMapper.storyCommentsListToCommentsDTOList(storyDTOList);
 
+        log.info("ENTRY : getComments");
         return responseList;
-    }
-
-    private void resetStoreDBFlag() {
-        storeInDB = false;
     }
 
 }

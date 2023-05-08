@@ -2,31 +2,30 @@ package com.hacker.news.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Setter;
 
 import java.time.Instant;
 
 @Entity
-@Table(name = "PAST_STORIES")
+@Table(name = "past_stories")
 @Data
 public class Story {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "STORY_ID", nullable = false)
+    @Column(name = "story_id", nullable = false)
     private Long id;
 
-    @Column(name = "TITLE")
+    @Column(name = "title")
     private String title;
-    @Column(name = "STORY_URL")
+    @Column(name = "story_url")
     private String url;
 
-    @Column(name = "SCORE")
+    @Column(name = "score")
     private Integer score;
 
-    @Column(name = "TIME_STAMP")
+    @Column(name = "time_stamp")
     private Instant timestamp;
 
-    @Column(name = "SUBMITTER")
+    @Column(name = "submitter")
     private String submitter;
 
     public Long getTimestamp() {

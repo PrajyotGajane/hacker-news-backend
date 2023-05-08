@@ -11,11 +11,11 @@ import java.util.List;
 
 @Repository
 public interface NewsRepository extends JpaRepository<Story, Long> {
-    @Query(value = "SELECT * FROM PAST_STORIES", nativeQuery = true)
+    @Query(value = "SELECT * FROM past_stories", nativeQuery = true)
     List<Story> findAllPastStories();
 
     @Modifying
     @Transactional
-    @Query(value = "TRUNCATE TABLE PAST_STORIES", nativeQuery = true)
+    @Query(value = "TRUNCATE TABLE past_stories", nativeQuery = true)
     void truncateTable();
 }
